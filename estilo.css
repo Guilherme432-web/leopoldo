@@ -483,6 +483,40 @@ body {
     margin: 0 auto;
 }
 
+.home-visual {
+    display: block;
+    width: min(100%, 640px);
+    height: auto;
+    margin: var(--spacing-lg) auto 0;
+    overflow: visible;
+}
+
+.visualizer-wave {
+    fill: none;
+    stroke: var(--accent-cyan);
+    stroke-width: 2;
+    opacity: 0.45;
+}
+
+.visualizer-bars rect {
+    fill: url(#visualizer-gradient);
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: visualizer-pulse 1.2s ease-in-out infinite alternate;
+}
+
+.visualizer-bars rect:nth-child(3n) { animation-delay: 0.25s; }
+.visualizer-bars rect:nth-child(3n + 1) { animation-delay: 0.5s; }
+
+@keyframes visualizer-pulse {
+    from { transform: scaleY(0.55); opacity: 0.65; }
+    to { transform: scaleY(1); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .visualizer-bars rect { animation: none; }
+}
+
 .modules-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -879,6 +913,104 @@ body {
     font-size: 3rem;
     margin-bottom: var(--spacing-sm);
     display: block;
+}
+
+/* Imagens ilustrativas e animações educativas locais */
+.illustration-section,
+.video-section {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-lg);
+}
+
+.illustration-section h2,
+.video-section h2 {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    font-size: 1.3rem;
+    margin-bottom: var(--spacing-md);
+    color: var(--accent-cyan);
+    padding-bottom: var(--spacing-sm);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.illustration-container,
+.learning-animation {
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-sm);
+    padding: var(--spacing-md);
+}
+
+.concept-illustration,
+.learning-animation svg {
+    display: block;
+    width: 100%;
+    max-width: 760px;
+    height: auto;
+    margin: 0 auto;
+    overflow: visible;
+}
+
+.concept-illustration text,
+.learning-animation text {
+    fill: var(--text-secondary);
+    font: 600 15px Inter, sans-serif;
+}
+
+.concept-illustration > path,
+.concept-illustration .illustration-fine {
+    fill: none;
+    stroke: var(--accent-cyan);
+    stroke-width: 4;
+}
+
+.concept-illustration g circle { fill: var(--accent-pink); }
+.concept-illustration .illustration-coarse { stroke: var(--accent-pink); }
+.concept-illustration .illustration-grid { stroke: var(--border-color); stroke-dasharray: 4 5; }
+.concept-illustration .illustration-track { fill: var(--bg-primary); stroke: var(--border-color); stroke-width: 2; }
+.concept-illustration .illustration-sparse rect { fill: var(--accent-pink); }
+.concept-illustration .illustration-dense rect { fill: var(--accent-cyan); }
+.concept-illustration .illustration-lossless { fill: var(--bg-card); stroke: var(--accent-green); stroke-width: 2; }
+.concept-illustration .illustration-lossy { fill: var(--bg-card); stroke: var(--accent-pink); stroke-width: 2; }
+.concept-illustration .illustration-caption { fill: var(--accent-cyan); font-size: 13px; }
+
+.video-description { color: var(--text-secondary); margin-bottom: var(--spacing-md); }
+.animation-wave, .animation-step, .animation-arrow { fill: none; stroke: var(--accent-cyan); stroke-width: 4; stroke-linejoin: round; stroke-dasharray: 900; animation: draw-wave 3s linear infinite; }
+.animation-dots circle { fill: var(--accent-pink); animation: sample-pulse 1s ease-in-out infinite alternate; }
+.animation-dots circle:nth-child(even) { animation-delay: 0.4s; }
+.animation-grid { fill: none; stroke: var(--border-color); stroke-dasharray: 4 5; }
+.animation-track { fill: var(--bg-primary); stroke: var(--border-color); stroke-width: 2; }
+.animation-flow rect { fill: var(--accent-cyan); animation: flow-pulse 1.2s ease-in-out infinite alternate; }
+.animation-flow rect:nth-child(even) { animation-delay: 0.5s; }
+.animation-lossless { fill: var(--bg-card); stroke: var(--accent-green); stroke-width: 3; }
+.animation-lossy { fill: var(--bg-card); stroke: var(--accent-pink); stroke-width: 3; }
+.animation-paused svg *,
+.animation-paused svg *::before,
+.animation-paused svg *::after { animation-play-state: paused !important; }
+
+@keyframes draw-wave { to { stroke-dashoffset: -900; } }
+@keyframes sample-pulse { to { opacity: 0.35; transform: scale(0.7); transform-origin: center; } }
+@keyframes flow-pulse { to { opacity: 0.35; } }
+
+.animation-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    margin-top: var(--spacing-sm);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    font: inherit;
+    cursor: pointer;
+}
+.animation-toggle:hover { border-color: var(--accent-cyan); }
+
+@media (prefers-reduced-motion: reduce) {
+    .learning-animation svg *, .learning-animation svg *::before, .learning-animation svg *::after { animation: none !important; }
 }
 
 /* ========================================
