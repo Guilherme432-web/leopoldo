@@ -1,6 +1,11 @@
 
             
     
+
+
+
+
+
     const AppState = {
     currentModule: 'home',
     visitedModules: new Set(['home']),
@@ -204,6 +209,7 @@ function renderLearningAnimation(module) {
         bitrate: '<rect class="animation-track" x="45" y="30" width="570" height="30" rx="8"/><rect class="animation-track" x="45" y="82" width="570" height="30" rx="8"/><g class="animation-flow"><rect x="58" y="38" width="38" height="14" rx="3"/><rect x="112" y="38" width="38" height="14" rx="3"/><rect x="166" y="38" width="38" height="14" rx="3"/><rect x="220" y="38" width="38" height="14" rx="3"/><rect x="274" y="38" width="38" height="14" rx="3"/><rect x="328" y="38" width="38" height="14" rx="3"/><rect x="382" y="38" width="38" height="14" rx="3"/><rect x="436" y="38" width="38" height="14" rx="3"/><rect x="490" y="38" width="38" height="14" rx="3"/><rect x="544" y="38" width="38" height="14" rx="3"/></g><text x="45" y="132">Fluxo de dados por segundo</text>',
         formats: '<rect class="animation-lossless" x="55" y="30" width="220" height="86" rx="12"/><rect class="animation-lossy" x="385" y="30" width="220" height="86" rx="12"/><path class="animation-arrow" d="M295 73 H365"/><text x="165" y="80" text-anchor="middle">Preserva os dados</text><text x="495" y="80" text-anchor="middle">Reduz o tamanho</text>'
     };
+
     const videoSources = {
         'sample-rate': 'videos/sample-rate.mp4',
         'bit-depth': 'videos/bit-depth.mp4',
@@ -211,18 +217,19 @@ function renderLearningAnimation(module) {
         formats: 'videos/formats.mp4'
     };
 
+    const videoSrc = videoSources[module.id] || '';
+
     return `
         <section class="video-section">
-            <h2><i class="fas fa-film"></i> Vídeo educativo: ${module.title}</h2>
-            <p class="video-description">Assista ao vídeo ou use a animação ilustrativa caso o arquivo MP4 não esteja disponível.</p>
-            <video class="learning-video" controls loop muted playsinline preload="metadata" aria-label="Vídeo educativo sobre ${module.title}" hidden>
-                <source src="${videoSources[module.id] || ''}" type="video/mp4">
+            <h2><i class="fas fa-film" aria-hidden="true"></i> Vídeo educativo: ${module.title}</h2>
+            <p class="video-description">Assista ao vídeo. Use os controles do player para pausar ou avançar. Se o arquivo não carregar, a animação ilustrativa aparece automaticamente.</p>
+            <video class="learning-video" controls loop muted playsinline preload="auto" aria-label="Vídeo educativo sobre ${module.title}">
+                <source src="${videoSrc}" type="video/mp4">
                 Seu navegador não suporta vídeo MP4.
             </video>
-            <div class="learning-animation">
+            <div class="learning-animation" hidden>
                 <svg viewBox="0 0 680 150" role="img" aria-label="Animação explicativa sobre ${module.title}">${scenes[module.id] || ''}</svg>
             </div>
-            <button class="animation-toggle" type="button" aria-pressed="false"><i class="fas fa-pause"></i><span>Pausar animação</span></button>
         </section>`;
 }
 
@@ -230,34 +237,39 @@ function attachLearningAnimationListeners() {
     document.querySelectorAll('.video-section').forEach(section => {
         const video = section.querySelector('.learning-video');
         const animation = section.querySelector('.learning-animation');
-        const toggle = section.querySelector('.animation-toggle');
+        const source = video.querySelector('source');
 
-        video.addEventListener('loadeddata', () => {
+        if (source && source.getAttribute('src')) {
+            video.load();
+        }
+
+        const showVideo = () => {
             video.hidden = false;
-            animation.hidden = true;
-            toggle.hidden = true;
-        }, { once: true });
+            video.style.display = 'block';
+            if (animation) animation.hidden = true;
+        };
 
-        video.addEventListener('error', () => {
+        const showFallback = () => {
             video.hidden = true;
-            animation.hidden = false;
-            toggle.hidden = false;
-        }, { once: true });
-    });
+            video.style.display = 'none';
+            if (animation) animation.hidden = false;
+        };
 
-    document.querySelectorAll('.animation-toggle').forEach(button => {
-        button.addEventListener('click', () => {
-            const animation = button.closest('.video-section').querySelector('.learning-animation');
-            const isPaused = animation.classList.toggle('animation-paused');
-            button.setAttribute('aria-pressed', String(isPaused));
-            button.innerHTML = `<i class="fas ${isPaused ? 'fa-play' : 'fa-pause'}"></i><span>${isPaused ? 'Retomar animação' : 'Pausar animação'}</span>`;
-        });
+        video.addEventListener('loadeddata', showVideo, { once: true });
+        video.addEventListener('canplay', showVideo, { once: true });
+        video.addEventListener('error', showFallback, { once: true });
+        if (source) {
+            source.addEventListener('error', showFallback, { once: true });
+        }
+
+        setTimeout(() => {
+            if (video.readyState < 2) {
+                showFallback();
+            }
+        }, 4000);
     });
 }
 
-// ========================================
-// DIAGRAMAS ILUSTRATIVOS DOS MÓDULOS
-// ========================================
 function renderDiagram(module) {
     const diagrams = {
         'sample-rate': `
@@ -317,10 +329,38 @@ function renderDiagram(module) {
 // RENDERIZAÇÃO: MÓDULOS DE CONTEÚDO
 // ========================================
 function renderModuleContent(module) {
+    const demos = module.audioDemos || [];
+    const demosHTML = demos.map(demo => {
+        const qualityClass = demo.quality === 'high' ? 'audio-player-original' :
+            demo.quality === 'mid' ? 'audio-player-mid' : 'audio-player-degraded';
+        const badgeClass = demo.quality === 'high' ? 'badge-original' :
+            demo.quality === 'mid' ? 'badge-mid' : 'badge-degraded';
+        return `
+            <div class="audio-player ${qualityClass}" data-demo="${demo.id}">
+                <div class="audio-player-header">
+                    <span class="audio-badge ${badgeClass}">${demo.badge}</span>
+                    <h3>${demo.label}</h3>
+                </div>
+                <p class="audio-description">${demo.description}</p>
+                <div class="audio-controls">
+                    <button class="audio-btn play-btn" type="button" data-demo="${demo.id}" aria-label="Ouvir demonstração: ${demo.label}">
+                        <i class="fas fa-play" aria-hidden="true"></i>
+                        <span>Ouvir</span>
+                    </button>
+                    <div class="audio-waveform" aria-hidden="true">
+                        <span></span><span></span><span></span><span></span><span></span>
+                        <span></span><span></span><span></span><span></span><span></span>
+                    </div>
+                </div>
+            </div>`;
+    }).join('');
+
+    const gridClass = demos.length > 2 ? 'audio-players audio-players-multi' : 'audio-players';
+
     return `
         <div class="module-container">
             <div class="module-header">
-                <div class="module-header-icon">
+                <div class="module-header-icon" aria-hidden="true">
                     <i class="fas ${module.icon}"></i>
                 </div>
                 <div class="module-header-text">
@@ -328,124 +368,74 @@ function renderModuleContent(module) {
                     <p>${module.subtitle}</p>
                 </div>
             </div>
-            
-                        <div class="module-body">
-                <!-- Teoria -->
+
+            <div class="module-body">
                 <section class="theory-section">
-                    <h2><i class="fas fa-book-open"></i> Teoria</h2>
+                    <h2><i class="fas fa-book-open" aria-hidden="true"></i> Teoria</h2>
                     <div class="theory-content">
                         ${module.theory}
                     </div>
                 </section>
 
                 <section class="references-section" aria-labelledby="referencesTitle">
-                    <h2 id="referencesTitle"><i class="fas fa-book"></i> Referências</h2>
+                    <h2 id="referencesTitle"><i class="fas fa-book" aria-hidden="true"></i> Referências</h2>
                     <ul>${audioReferences.map(reference => `
                         <li><a href="${reference.url}" target="_blank" rel="noopener noreferrer">${reference.title}</a></li>
                     `).join('')}</ul>
                 </section>
 
                 <section class="illustration-section">
-                    <h2><i class="fas fa-image"></i> Imagem ilustrativa</h2>
+                    <h2><i class="fas fa-image" aria-hidden="true"></i> Imagem ilustrativa</h2>
                     <div class="illustration-container">${renderIllustration(module)}</div>
                 </section>
 
                 ${renderLearningAnimation(module)}
-                
-                <!-- Diagrama -->
+
                 <section class="diagram-section">
-                    <h2><i class="fas fa-project-diagram"></i> Diagrama</h2>
+                    <h2><i class="fas fa-project-diagram" aria-hidden="true"></i> Diagrama</h2>
                     <div class="diagram-container">
                         ${renderDiagram(module)}
                     </div>
                 </section>
-                
-                <!-- Player Comparativo A/B -->
+
                 <section class="audio-comparison-section">
-                    <h2><i class="fas fa-headphones"></i> Comparação A/B</h2>
+                    <h2><i class="fas fa-headphones" aria-hidden="true"></i> Comparação A/B</h2>
                     <p class="audio-comparison-intro">
-                        Ouça os dois áudios abaixo e perceba a diferença na prática. 
+                        Ouça as demonstrações abaixo e perceba a diferença na prática.
                         <strong>Use fones de ouvido</strong> para melhor experiência.
                     </p>
-                    
-                    <div class="audio-players">
-                        <!-- Player Original -->
-                        <div class="audio-player audio-player-original" data-type="original" data-module="${module.id}">
-                            <div class="audio-player-header">
-                                <span class="audio-badge badge-original">ORIGINAL</span>
-                                <h3>${module.audioComparison.original.label}</h3>
-                            </div>
-                            <p class="audio-description">${module.audioComparison.original.description}</p>
-                            <div class="audio-controls">
-                                <button class="audio-btn play-btn" data-src="${module.audioComparison.original.src}">
-                                    <i class="fas fa-play"></i>
-                                    <span>Ouvir</span>
-                                </button>
-                                <div class="audio-waveform">
-                                    <span></span><span></span><span></span><span></span><span></span>
-                                    <span></span><span></span><span></span><span></span><span></span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Player Degradado -->
-                        <div class="audio-player audio-player-degraded" data-type="degraded" data-module="${module.id}">
-                            <div class="audio-player-header">
-                                <span class="audio-badge badge-degraded">DEGRADADO</span>
-                                <h3>${module.audioComparison.degraded.label}</h3>
-                            </div>
-                            <p class="audio-description">${module.audioComparison.degraded.description}</p>
-                            <div class="audio-controls">
-                                <button class="audio-btn play-btn" data-src="${module.audioComparison.degraded.src}">
-                                    <i class="fas fa-play"></i>
-                                    <span>Ouvir</span>
-                                </button>
-                                <div class="audio-waveform">
-                                    <span></span><span></span><span></span><span></span><span></span>
-                                    <span></span><span></span><span></span><span></span><span></span>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="${gridClass}">
+                        ${demosHTML}
                     </div>
-                    
-                    <!-- Elemento de áudio oculto -->
-                    <audio id="audioPlayer" preload="metadata"></audio>
+                    <audio id="audioPlayer" preload="auto"></audio>
                 </section>
             </div>
-            
-            <!-- Navegação entre módulos -->
+
             <div class="module-navigation">
-                <button class="nav-btn nav-btn-prev" id="prevModule">
-                    <i class="fas fa-arrow-left"></i>
+                <button class="nav-btn nav-btn-prev" id="prevModule" type="button" aria-label="Ir para o módulo anterior">
+                    <i class="fas fa-arrow-left" aria-hidden="true"></i>
                     <span>Módulo Anterior</span>
                 </button>
-                <button class="nav-btn nav-btn-next" id="nextModule">
+                <button class="nav-btn nav-btn-next" id="nextModule" type="button" aria-label="Ir para o próximo módulo">
                     <span>Próximo Módulo</span>
-                    <i class="fas fa-arrow-right"></i>
+                    <i class="fas fa-arrow-right" aria-hidden="true"></i>
                 </button>
             </div>
         </div>
     `;
 }
 
-// ========================================
-// PLAYER DE ÁUDIO
-// ========================================
-let currentPlayingBtn = null;
-const demoAudioUrls = {};
+function createDemoAudioDataUrl(demoId) {
+    if (demoAudioUrls[demoId]) return demoAudioUrls[demoId];
 
-function createDemoAudioDataUrl(moduleId, isDegraded) {
-    const key = `${moduleId}-${isDegraded ? 'degraded' : 'original'}`;
-    if (demoAudioUrls[key]) return demoAudioUrls[key];
-
-    const sampleRate = 22050;
-    const duration = 2.5;
+    const sampleRate = 44100;
+    const duration = 3.2;
     const sampleCount = Math.floor(sampleRate * duration);
     const bytesPerSample = 2;
     const buffer = new ArrayBuffer(44 + sampleCount * bytesPerSample);
     const view = new DataView(buffer);
-    const writeText = (offset, text) => {
-        for (let i = 0; i < text.length; i++) view.setUint8(offset + i, text.charCodeAt(i));
+    const writeText = (offset, str) => {
+        for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
     };
 
     writeText(0, 'RIFF');
@@ -462,94 +452,117 @@ function createDemoAudioDataUrl(moduleId, isDegraded) {
     writeText(36, 'data');
     view.setUint32(40, sampleCount * bytesPerSample, true);
 
-    const effectiveRate = moduleId === 'sample-rate' ? 4000 : moduleId === 'formats' ? 11025 : sampleRate;
-    const step = Math.max(1, Math.round(sampleRate / effectiveRate));
-    let heldSample = 0;
-    let filteredSample = 0;
+    // Perfis mais distintos e audíveis
+    const profiles = {
+        // Sample rate
+        'sr-high': { holdStep: 1, bits: 16, cutoff: 18000, noise: 0, grit: 0 },
+        'sr-low':  { holdStep: Math.round(sampleRate / 5500), bits: 16, cutoff: 2500, noise: 0.01, grit: 0.15 },
+        // Bit depth
+        'bd-16': { holdStep: 1, bits: 16, cutoff: 18000, noise: 0, grit: 0 },
+        'bd-3':  { holdStep: 1, bits: 3,  cutoff: 12000, noise: 0.02, grit: 0.4 },
+        // Bitrate (64 / 128 / 320 kbps)
+        'br-320': { holdStep: 1, bits: 15, cutoff: 16000, noise: 0.002, grit: 0.02 },
+        'br-128': { holdStep: 2, bits: 11, cutoff: 9000,  noise: 0.012, grit: 0.12 },
+        'br-64':  { holdStep: 5, bits: 7,  cutoff: 4500,  noise: 0.03,  grit: 0.28 },
+        // Formatos
+        'fmt-wav':  { holdStep: 1, bits: 16, cutoff: 18000, noise: 0, grit: 0 },
+        'fmt-flac': { holdStep: 1, bits: 16, cutoff: 18000, noise: 0, grit: 0 },
+        'fmt-mp3':  { holdStep: 3, bits: 9,  cutoff: 7000,  noise: 0.018, grit: 0.18 },
+        'fmt-aac':  { holdStep: 3, bits: 8,  cutoff: 8000,  noise: 0.014, grit: 0.14 }
+    };
+
+    const p = profiles[demoId] || profiles['sr-high'];
+    let held = 0;
+    let lp = 0;
+    const alpha = Math.min(1, (2 * Math.PI * p.cutoff) / sampleRate);
 
     for (let i = 0; i < sampleCount; i++) {
-        if (!isDegraded || i % step === 0) {
-            const time = i / sampleRate;
-            let tone;
-            if (moduleId === 'sample-rate') {
-                tone = Math.sin(2 * Math.PI * 440 * time) * 0.42
-                    + Math.sin(2 * Math.PI * 6800 * time) * 0.25
-                    + Math.sin(2 * Math.PI * 1200 * time) * 0.15;
-            } else {
-                tone = Math.sin(2 * Math.PI * 440 * time) * 0.5
-                    + Math.sin(2 * Math.PI * 660 * time) * 0.2
-                    + Math.sin(2 * Math.PI * 1760 * time) * 0.12;
-            }
+        if (i % p.holdStep === 0) {
+            const t = i / sampleRate;
+            // Tom musical rico (acorde arpejado + brilho)
+            const envNote = 0.55 + 0.45 * Math.sin(2 * Math.PI * 2.2 * t);
+            let tone =
+                Math.sin(2 * Math.PI * 261.63 * t) * 0.28 * envNote +  // C4
+                Math.sin(2 * Math.PI * 329.63 * t) * 0.22 +             // E4
+                Math.sin(2 * Math.PI * 392.00 * t) * 0.18 +             // G4
+                Math.sin(2 * Math.PI * 523.25 * t) * 0.12 +             // C5
+                Math.sin(2 * Math.PI * 1046.5 * t) * 0.08 +             // C6
+                Math.sin(2 * Math.PI * 2093 * t) * 0.05 +               // C7 (agudo)
+                Math.sin(2 * Math.PI * 4186 * t) * 0.03;                // C8
 
-            if (isDegraded && moduleId === 'bitrate') {
-                filteredSample += (tone - filteredSample) * 0.12;
-                tone = filteredSample;
-            }
+            // Low-pass de 1 polo (corta agudos em baixo bitrate / lossy)
+            lp += alpha * (tone - lp);
+            tone = p.cutoff >= 16000 ? tone : lp;
 
-            if (isDegraded && (moduleId === 'bit-depth' || moduleId === 'bitrate' || moduleId === 'formats')) {
-                const bits = moduleId === 'bit-depth' ? 3 : moduleId === 'bitrate' ? 4 : 5;
-                const levels = Math.pow(2, bits) - 1;
+            // Quantização
+            if (p.bits < 16) {
+                const levels = Math.pow(2, p.bits) - 1;
                 tone = Math.round((tone + 1) * levels / 2) / levels * 2 - 1;
             }
-            heldSample = tone;
+
+            // Ruído + "grit" (artefato de compressão)
+            if (p.noise > 0) {
+                tone += (Math.random() * 2 - 1) * p.noise;
+            }
+            if (p.grit > 0) {
+                tone = Math.tanh(tone * (1 + p.grit * 2)) / (1 + p.grit * 0.5);
+            }
+
+            held = tone;
         }
 
-        const envelope = Math.min(1, i / 500, (sampleCount - i) / 1000);
-        const value = Math.max(-1, Math.min(1, heldSample * envelope));
+        const attack = Math.min(1, i / 800);
+        const release = Math.min(1, (sampleCount - i) / 1500);
+        const value = Math.max(-1, Math.min(1, held * attack * release * 0.9));
         view.setInt16(44 + i * bytesPerSample, value * 32767, true);
     }
 
     let binary = '';
     const bytes = new Uint8Array(buffer);
     for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
-    demoAudioUrls[key] = `data:audio/wav;base64,${btoa(binary)}`;
-    return demoAudioUrls[key];
+    demoAudioUrls[demoId] = `data:audio/wav;base64,${btoa(binary)}`;
+    return demoAudioUrls[demoId];
 }
 
 function attachAudioListeners() {
     const playButtons = document.querySelectorAll('.play-btn');
     const audioElement = document.getElementById('audioPlayer');
-    
+    if (!audioElement) return;
+
     playButtons.forEach(btn => {
         btn.addEventListener('click', () => {
-                        const player = btn.closest('.audio-player');
-            const isDegraded = player.classList.contains('audio-player-degraded');
-            const src = btn.dataset.src || createDemoAudioDataUrl(player.dataset.module, isDegraded);
-            
-            // Se o mesmo botão está tocando, pausa
+            const demoId = btn.dataset.demo;
+            const src = createDemoAudioDataUrl(demoId);
+
             if (currentPlayingBtn === btn && !audioElement.paused) {
                 audioElement.pause();
                 updatePlayButton(btn, false);
+                currentPlayingBtn = null;
                 return;
             }
-            
-            // Para qualquer áudio tocando anteriormente
+
             if (currentPlayingBtn) {
                 audioElement.pause();
                 updatePlayButton(currentPlayingBtn, false);
             }
-            
-            // Carrega e toca novo áudio
+
             audioElement.src = src;
             audioElement.play().catch(err => {
                 console.warn('Erro ao tocar áudio:', err);
-                alert('Áudio não encontrado. Verifique se o arquivo existe em: ' + src);
             });
-            
+
             updatePlayButton(btn, true);
             currentPlayingBtn = btn;
         });
     });
-    
-    // Quando o áudio termina, reseta o botão
+
     audioElement.addEventListener('ended', () => {
         if (currentPlayingBtn) {
             updatePlayButton(currentPlayingBtn, false);
             currentPlayingBtn = null;
         }
     });
-    
-    // Configura navegação entre módulos
+
     attachModuleNavigation();
 }
 
@@ -620,8 +633,8 @@ function renderQuiz() {
     const progress = (current / total) * 100;
     
     const optionsHTML = q.options.map((opt, idx) => `
-        <button class="quiz-option" data-index="${idx}">
-            <span class="quiz-option-letter">${String.fromCharCode(65 + idx)}</span>
+        <button class="quiz-option" type="button" data-index="${idx}" aria-label="Opção ${String.fromCharCode(65 + idx)}: ${opt}">
+            <span class="quiz-option-letter" aria-hidden="true">${String.fromCharCode(65 + idx)}</span>
             <span class="quiz-option-text">${opt}</span>
         </button>
     `).join('');
@@ -812,7 +825,7 @@ function setTheme(theme) {
 
     const themeToggle = document.getElementById('themeToggle');
     if (themeToggle) {
-        themeToggle.innerHTML = `<i class="fas ${isLight ? 'fa-sun' : 'fa-moon'}"></i>`;
+        themeToggle.innerHTML = `<i class="fas ${isLight ? 'fa-sun' : 'fa-moon'}" aria-hidden="true"></i>`;
         themeToggle.setAttribute('aria-label', isLight ? 'Ativar tema escuro' : 'Ativar tema claro');
         themeToggle.setAttribute('title', isLight ? 'Ativar tema escuro' : 'Ativar tema claro');
     }
