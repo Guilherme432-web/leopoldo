@@ -9,10 +9,10 @@ const modulesData = {
             <p>De acordo com o teorema de Nyquist, para representar uma frequência, a taxa de amostragem precisa ser pelo menos duas vezes maior que ela. O áudio de CD usa 44,1 kHz, suficiente para representar frequências audíveis até aproximadamente 22,05 kHz.</p>
             <div class="info-box info-box-info"><i class="fas fa-lightbulb"></i><div><strong>Em resumo</strong><p>Uma taxa maior pode representar frequências mais altas, mas também aumenta a quantidade de dados. Ela não significa automaticamente que o áudio terá melhor qualidade em qualquer situação.</p></div></div>
         `,
-        image: { src: '', alt: 'Representação de uma onda medida em diferentes instantes' },
+        image: { alt: 'Onda sonora com pontos de amostragem distribuídos ao longo do tempo' },
         audioComparison: {
-            original: { label: 'Amostragem alta', description: 'Demonstração de referência, com reprodução contínua do tom.', src: '' },
-            degraded: { label: 'Amostragem reduzida', description: 'Demonstração com efeito de amostragem reduzida e quantização mais grosseira.', src: '' }
+            original: { label: 'Referência de alta amostragem', description: 'Sinal com componentes agudos preservados, como referência.', src: '' },
+            degraded: { label: 'Taxa de amostragem reduzida', description: 'A frequência de amostragem é reduzida; componentes acima do limite podem gerar aliasing. Simulação didática, não um codec.', src: '' }
         }
     },
     'bit-depth': {
@@ -25,10 +25,10 @@ const modulesData = {
             <p>Por exemplo, 16 bits oferecem 65.536 níveis e são usados em áudio de CD. Com 24 bits, há muito mais margem para gravação e processamento, especialmente útil em estúdios.</p>
             <div class="info-box info-box-success"><i class="fas fa-check-circle"></i><div><strong>Importante</strong><p>Mais bits reduzem o erro de quantização e ampliam a faixa dinâmica disponível. A diferença é mais relevante durante gravação, edição e processamento do que em todo cenário de escuta.</p></div></div>
         `,
-        image: { src: '', alt: 'Representação dos níveis de quantização de uma onda sonora' },
+        image: { alt: 'Comparação entre poucos e muitos níveis de quantização' },
         audioComparison: {
-            original: { label: 'Maior profundidade', description: 'Tom com amplitude mais suave, como referência de maior resolução.', src: '' },
-            degraded: { label: 'Profundidade reduzida', description: 'Tom quantizado com menos níveis, simulando distorção de quantização.', src: '' }
+            original: { label: 'Maior profundidade de bits', description: 'Sinal de referência com resolução de amplitude mais alta.', src: '' },
+            degraded: { label: 'Quantização em 3 bits', description: 'A amplitude é quantizada em poucos níveis para tornar o erro de quantização audível.', src: '' }
         }
     },
     bitrate: {
@@ -41,10 +41,10 @@ const modulesData = {
             <p>Em formatos comprimidos com perdas, como MP3 ou AAC, um bitrate maior geralmente preserva mais detalhes e gera arquivos maiores. O resultado também depende do codec e do material sonoro.</p>
             <div class="info-box info-box-warning"><i class="fas fa-exclamation-triangle"></i><div><strong>Não confunda</strong><p>Bitrate não é a mesma coisa que sample rate ou bit depth. Em áudio PCM sem compressão, a taxa de dados pode ser estimada multiplicando sample rate × bit depth × número de canais.</p></div></div>
         `,
-        image: { src: '', alt: 'Comparação ilustrativa entre fluxos de áudio com diferentes taxas de dados' },
+        image: { alt: 'Fluxos com diferentes quantidades de dados por segundo' },
         audioComparison: {
-            original: { label: 'Mais dados', description: 'Demonstração de referência com o sinal completo.', src: '' },
-            degraded: { label: 'Menos dados', description: 'Demonstração simplificada de um sinal com menos informação.', src: '' }
+            original: { label: 'Maior taxa de dados', description: 'Sinal de referência com as componentes do tom preservadas.', src: '' },
+            degraded: { label: 'Taxa de dados reduzida', description: 'Simulação simplificada de compressão com redução de detalhes e resolução; não representa um codec específico.', src: '' }
         }
     },
     formats: {
@@ -57,10 +57,10 @@ const modulesData = {
             <p>Formatos sem perdas preservam os dados do áudio original, embora possam ocupar mais espaço. Formatos com perdas diminuem o tamanho removendo informações consideradas menos perceptíveis.</p>
             <div class="info-box info-box-info"><i class="fas fa-lightbulb"></i><div><strong>Como escolher</strong><ul><li>Para edição e preservação: prefira formatos sem perdas.</li><li>Para compartilhar ou economizar espaço: um formato com perdas pode ser conveniente.</li><li>Considere compatibilidade, tamanho e finalidade do áudio.</li></ul></div></div>
         `,
-        image: { src: '', alt: 'Resumo visual de formatos de áudio sem perdas e com perdas' },
+        image: { alt: 'Diferenças entre formatos de áudio sem perdas e com perdas' },
         audioComparison: {
-            original: { label: 'Sem perdas', description: 'Demonstração de referência sem redução intencional do sinal.', src: '' },
-            degraded: { label: 'Com perdas', description: 'Exemplo sonoro simplificado de redução da resolução do sinal.', src: '' }
+            original: { label: 'Referência sem perdas', description: 'Sinal original gerado para comparação, sem redução intencional.', src: '' },
+            degraded: { label: 'Exemplo com perdas', description: 'Quantização e redução de detalhes para ilustrar, de forma simplificada, uma codificação com perdas.', src: '' }
         }
     }
 };
