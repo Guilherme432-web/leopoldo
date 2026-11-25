@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Sistema educacional interativo sobre conceitos fundamentais de áudio digital">
+    <title>Áudio Digital - Sistemas Multimídia</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+        <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <i class="fas fa-wave-square"></i>
+                <h1>Áudio Digital</h1>
+            </div>
+            <div class="header-info">
+                <span class="course-name">Sistemas Multimídia</span>
+                <button class="theme-toggle" id="themeToggle" aria-label="Alternar tema">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Layout Principal -->
+    <div class="main-layout">
+        <!-- Sidebar de Navegação -->
+        <aside class="sidebar" id="sidebar">
+            <nav class="nav-menu">
+                <h3 class="nav-title">
+                    <i class="fas fa-compass"></i>
+                    Navegação
+                </h3>
+                <ul class="nav-list">
+                    <li class="nav-item active" data-module="home">
+                        <a href="#home" class="nav-link">
+                            <i class="fas fa-home"></i>
+                            <span>Início</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" data-module="sample-rate">
+                        <a href="#sample-rate" class="nav-link">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Sample Rate</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" data-module="bit-depth">
+                        <a href="#bit-depth" class="nav-link">
+                            <i class="fas fa-layer-group"></i>
+                            <span>Bit Depth</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" data-module="bitrate">
+                        <a href="#bitrate" class="nav-link">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Bitrate</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" data-module="formats">
+                        <a href="#formats" class="nav-link">
+                            <i class="fas fa-file-audio"></i>
+                            <span>Formatos</span>
+                        </a>
+                    </li>
+                    <li class="nav-item nav-quiz" data-module="quiz">
+                        <a href="#quiz" class="nav-link">
+                            <i class="fas fa-question-circle"></i>
+                            <span>Quiz</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="progress-indicator">
+                    <i class="fas fa-chart-pie"></i>
+                    <span>Progresso: <strong id="progressText">0%</strong></span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Conteúdo Principal -->
+        <main class="content" id="mainContent">
+            <!-- O conteúdo será injetado aqui via JavaScript -->
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <p>&copy; 2026 - Sistema Educacional de Áudio Digital</p>
+            <p>Desenvolvido para a disciplina de Sistemas Multimídia</p>
+        </div>
+    </footer>
+
+        <!-- Dados e lógica da aplicação -->
+    <script src="data.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
