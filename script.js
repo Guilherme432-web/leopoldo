@@ -1,4 +1,7 @@
-const AppState = {
+
+            
+    
+    const AppState = {
     currentModule: 'home',
     visitedModules: new Set(['home']),
     quizState: {
@@ -67,8 +70,9 @@ function renderModule(moduleId) {
     } else if (moduleId === 'quiz') {
         mainContent.innerHTML = renderQuiz();
         attachQuizListeners();
-    } else if (modulesData[moduleId]) {
+        } else if (modulesData[moduleId]) {
         mainContent.innerHTML = renderModuleContent(modulesData[moduleId]);
+        attachLearningAnimationListeners();
         attachAudioListeners();
     } else {
         mainContent.innerHTML = '<h2>Módulo não encontrado</h2>';
@@ -100,10 +104,27 @@ function renderHome() {
                 <h1 class="home-title">
                     Bem-vindo ao <span class="text-gradient">Áudio Digital</span>
                 </h1>
-                <p class="home-subtitle">
+                                <p class="home-subtitle">
                     Explore os conceitos fundamentais do áudio digital de forma interativa. 
                     Escolha um módulo abaixo para começar sua jornada.
                 </p>
+                <svg class="home-visual" viewBox="0 0 640 140" role="img" aria-label="Visualização animada de ondas sonoras">
+                    <path class="visualizer-wave" d="M20 70 C70 70 70 25 120 25 S170 115 220 115 S270 45 320 45 S370 95 420 95 S470 20 520 20 S570 70 620 70" />
+                    <g class="visualizer-bars">
+                        <rect x="92" y="57" width="8" height="26" rx="4" />
+                        <rect x="112" y="42" width="8" height="56" rx="4" />
+                        <rect x="132" y="53" width="8" height="34" rx="4" />
+                        <rect x="232" y="48" width="8" height="44" rx="4" />
+                        <rect x="252" y="30" width="8" height="80" rx="4" />
+                        <rect x="272" y="50" width="8" height="40" rx="4" />
+                        <rect x="352" y="55" width="8" height="30" rx="4" />
+                        <rect x="372" y="35" width="8" height="70" rx="4" />
+                        <rect x="392" y="49" width="8" height="42" rx="4" />
+                        <rect x="492" y="43" width="8" height="54" rx="4" />
+                        <rect x="512" y="26" width="8" height="88" rx="4" />
+                        <rect x="532" y="51" width="8" height="38" rx="4" />
+                    </g>
+                </svg>
             </div>
             
             <div class="modules-grid">
@@ -134,6 +155,70 @@ function renderHome() {
             </div>
         </div>
     `;
+}
+
+// ========================================
+// ILUSTRAÇÕES E ANIMAÇÃO EDUCATIVA
+// ========================================
+function renderIllustration(module) {
+    const illustrations = {
+        'sample-rate': `
+            <svg class="concept-illustration" viewBox="0 0 640 180" role="img" aria-label="${module.image.alt}">
+                <path d="M25 90 C65 20 105 20 145 90 S225 160 265 90 S345 20 385 90 S465 160 505 90 S585 20 615 90" />
+                <g><circle cx="25" cy="90" r="6"/><circle cx="105" cy="50" r="6"/><circle cx="185" cy="130" r="6"/><circle cx="265" cy="90" r="6"/><circle cx="345" cy="50" r="6"/><circle cx="425" cy="130" r="6"/><circle cx="505" cy="90" r="6"/><circle cx="585" cy="50" r="6"/></g>
+                <text x="320" y="174" text-anchor="middle">Amostras capturadas ao longo do tempo</text>
+            </svg>`,
+        'bit-depth': `
+            <svg class="concept-illustration" viewBox="0 0 640 180" role="img" aria-label="${module.image.alt}">
+                <text x="160" y="32" text-anchor="middle">Poucos níveis</text><text x="480" y="32" text-anchor="middle">Mais níveis</text>
+                <path class="illustration-coarse" d="M35 115 H95 V75 H155 V115 H215 V145 H275" />
+                <path class="illustration-fine" d="M355 112 H395 V92 H435 V72 H475 V92 H515 V112 H555 V132 H605" />
+                <path class="illustration-grid" d="M35 55H275 M35 95H275 M35 135H275 M355 65H605 M355 85H605 M355 105H605 M355 125H605 M355 145H605" />
+            </svg>`,
+        bitrate: `
+            <svg class="concept-illustration" viewBox="0 0 640 180" role="img" aria-label="${module.image.alt}">
+                <text x="28" y="65">Menos dados</text><text x="28" y="130">Mais dados</text>
+                <rect class="illustration-track" x="180" y="40" width="420" height="38" rx="8"/><rect class="illustration-track" x="180" y="105" width="420" height="38" rx="8"/>
+                <g class="illustration-sparse"><rect x="195" y="49" width="50" height="20" rx="4"/><rect x="265" y="49" width="50" height="20" rx="4"/><rect x="335" y="49" width="50" height="20" rx="4"/></g>
+                <g class="illustration-dense"><rect x="195" y="114" width="24" height="20" rx="3"/><rect x="229" y="114" width="24" height="20" rx="3"/><rect x="263" y="114" width="24" height="20" rx="3"/><rect x="297" y="114" width="24" height="20" rx="3"/><rect x="331" y="114" width="24" height="20" rx="3"/><rect x="365" y="114" width="24" height="20" rx="3"/><rect x="399" y="114" width="24" height="20" rx="3"/><rect x="433" y="114" width="24" height="20" rx="3"/><rect x="467" y="114" width="24" height="20" rx="3"/><rect x="501" y="114" width="24" height="20" rx="3"/><rect x="535" y="114" width="24" height="20" rx="3"/></g>
+            </svg>`,
+        formats: `
+            <svg class="concept-illustration" viewBox="0 0 640 180" role="img" aria-label="${module.image.alt}">
+                <rect class="illustration-lossless" x="45" y="36" width="250" height="110" rx="14"/><rect class="illustration-lossy" x="345" y="36" width="250" height="110" rx="14"/>
+                <text x="170" y="78" text-anchor="middle">Sem perdas</text><text class="illustration-caption" x="170" y="108" text-anchor="middle">WAV · AIFF · FLAC</text>
+                <text x="470" y="78" text-anchor="middle">Com perdas</text><text class="illustration-caption" x="470" y="108" text-anchor="middle">MP3 · AAC</text>
+            </svg>`
+    };
+    return illustrations[module.id] || '';
+}
+
+function renderLearningAnimation(module) {
+    const scenes = {
+        'sample-rate': '<path class="animation-wave" d="M20 65 C55 10 90 10 125 65 S195 120 230 65 S300 10 335 65 S405 120 440 65 S510 10 545 65 S615 120 650 65"/><g class="animation-dots"><circle cx="20" cy="65" r="6"/><circle cx="90" cy="35" r="6"/><circle cx="160" cy="95" r="6"/><circle cx="230" cy="65" r="6"/><circle cx="300" cy="35" r="6"/><circle cx="370" cy="95" r="6"/><circle cx="440" cy="65" r="6"/><circle cx="510" cy="35" r="6"/><circle cx="580" cy="95" r="6"/><circle cx="650" cy="65" r="6"/></g>',
+        'bit-depth': '<path class="animation-grid" d="M40 35H640 M40 65H640 M40 95H640"/><path class="animation-step" d="M40 95 H120 V65 H200 V35 H280 V65 H360 V95 H440 V65 H520 V35 H600 V65 H640"/>',
+        bitrate: '<rect class="animation-track" x="45" y="30" width="570" height="30" rx="8"/><rect class="animation-track" x="45" y="82" width="570" height="30" rx="8"/><g class="animation-flow"><rect x="58" y="38" width="38" height="14" rx="3"/><rect x="112" y="38" width="38" height="14" rx="3"/><rect x="166" y="38" width="38" height="14" rx="3"/><rect x="220" y="38" width="38" height="14" rx="3"/><rect x="274" y="38" width="38" height="14" rx="3"/><rect x="328" y="38" width="38" height="14" rx="3"/><rect x="382" y="38" width="38" height="14" rx="3"/><rect x="436" y="38" width="38" height="14" rx="3"/><rect x="490" y="38" width="38" height="14" rx="3"/><rect x="544" y="38" width="38" height="14" rx="3"/></g><text x="45" y="132">Fluxo de dados por segundo</text>',
+        formats: '<rect class="animation-lossless" x="55" y="30" width="220" height="86" rx="12"/><rect class="animation-lossy" x="385" y="30" width="220" height="86" rx="12"/><path class="animation-arrow" d="M295 73 H365"/><text x="165" y="80" text-anchor="middle">Preserva os dados</text><text x="495" y="80" text-anchor="middle">Reduz o tamanho</text>'
+    };
+    return `
+        <section class="video-section">
+            <h2><i class="fas fa-film"></i> Vídeo educativo: ${module.title}</h2>
+            <p class="video-description">Animação visual curta para reforçar o conceito. Use o controle para pausar ou retomar.</p>
+            <div class="learning-animation">
+                <svg viewBox="0 0 680 150" role="img" aria-label="Animação explicativa sobre ${module.title}">${scenes[module.id] || ''}</svg>
+            </div>
+            <button class="animation-toggle" type="button" aria-pressed="false"><i class="fas fa-pause"></i><span>Pausar animação</span></button>
+        </section>`;
+}
+
+function attachLearningAnimationListeners() {
+    document.querySelectorAll('.animation-toggle').forEach(button => {
+        button.addEventListener('click', () => {
+            const animation = button.closest('.video-section').querySelector('.learning-animation');
+            const isPaused = animation.classList.toggle('animation-paused');
+            button.setAttribute('aria-pressed', String(isPaused));
+            button.innerHTML = `<i class="fas ${isPaused ? 'fa-play' : 'fa-pause'}"></i><span>${isPaused ? 'Retomar animação' : 'Pausar animação'}</span>`;
+        });
+    });
 }
 
 // ========================================
@@ -210,7 +295,7 @@ function renderModuleContent(module) {
                 </div>
             </div>
             
-            <div class="module-body">
+                        <div class="module-body">
                 <!-- Teoria -->
                 <section class="theory-section">
                     <h2><i class="fas fa-book-open"></i> Teoria</h2>
@@ -218,8 +303,15 @@ function renderModuleContent(module) {
                         ${module.theory}
                     </div>
                 </section>
+
+                <section class="illustration-section">
+                    <h2><i class="fas fa-image"></i> Imagem ilustrativa</h2>
+                    <div class="illustration-container">${renderIllustration(module)}</div>
+                </section>
+
+                ${renderLearningAnimation(module)}
                 
-                                <!-- Diagrama -->
+                <!-- Diagrama -->
                 <section class="diagram-section">
                     <h2><i class="fas fa-project-diagram"></i> Diagrama</h2>
                     <div class="diagram-container">
@@ -301,8 +393,8 @@ function renderModuleContent(module) {
 let currentPlayingBtn = null;
 const demoAudioUrls = {};
 
-function createDemoAudioDataUrl(isDegraded) {
-    const key = isDegraded ? 'degraded' : 'original';
+function createDemoAudioDataUrl(moduleId, isDegraded) {
+    const key = `${moduleId}-${isDegraded ? 'degraded' : 'original'}`;
     if (demoAudioUrls[key]) return demoAudioUrls[key];
 
     const sampleRate = 22050;
@@ -311,7 +403,6 @@ function createDemoAudioDataUrl(isDegraded) {
     const bytesPerSample = 2;
     const buffer = new ArrayBuffer(44 + sampleCount * bytesPerSample);
     const view = new DataView(buffer);
-
     const writeText = (offset, text) => {
         for (let i = 0; i < text.length; i++) view.setUint8(offset + i, text.charCodeAt(i));
     };
@@ -330,17 +421,41 @@ function createDemoAudioDataUrl(isDegraded) {
     writeText(36, 'data');
     view.setUint32(40, sampleCount * bytesPerSample, true);
 
-    const playbackRate = isDegraded ? 8000 : sampleRate;
-    const levels = isDegraded ? 8 : 32767;
+    const effectiveRate = moduleId === 'sample-rate' ? 4000 : moduleId === 'formats' ? 11025 : sampleRate;
+    const step = Math.max(1, Math.round(sampleRate / effectiveRate));
     let heldSample = 0;
+    let filteredSample = 0;
+
     for (let i = 0; i < sampleCount; i++) {
-        if (!isDegraded || i % Math.round(sampleRate / playbackRate) === 0) {
+        if (!isDegraded || i % step === 0) {
             const time = i / sampleRate;
-            const tone = Math.sin(2 * Math.PI * 440 * time) * 0.55 + Math.sin(2 * Math.PI * 660 * time) * 0.2;
-            heldSample = isDegraded ? Math.round(tone * levels) / levels : tone;
+            let tone;
+            if (moduleId === 'sample-rate') {
+                tone = Math.sin(2 * Math.PI * 440 * time) * 0.42
+                    + Math.sin(2 * Math.PI * 6800 * time) * 0.25
+                    + Math.sin(2 * Math.PI * 1200 * time) * 0.15;
+            } else {
+                tone = Math.sin(2 * Math.PI * 440 * time) * 0.5
+                    + Math.sin(2 * Math.PI * 660 * time) * 0.2
+                    + Math.sin(2 * Math.PI * 1760 * time) * 0.12;
+            }
+
+            if (isDegraded && moduleId === 'bitrate') {
+                filteredSample += (tone - filteredSample) * 0.12;
+                tone = filteredSample;
+            }
+
+            if (isDegraded && (moduleId === 'bit-depth' || moduleId === 'bitrate' || moduleId === 'formats')) {
+                const bits = moduleId === 'bit-depth' ? 3 : moduleId === 'bitrate' ? 4 : 5;
+                const levels = Math.pow(2, bits) - 1;
+                tone = Math.round((tone + 1) * levels / 2) / levels * 2 - 1;
+            }
+            heldSample = tone;
         }
+
         const envelope = Math.min(1, i / 500, (sampleCount - i) / 1000);
-        view.setInt16(44 + i * bytesPerSample, Math.max(-1, Math.min(1, heldSample * envelope)) * 32767, true);
+        const value = Math.max(-1, Math.min(1, heldSample * envelope));
+        view.setInt16(44 + i * bytesPerSample, value * 32767, true);
     }
 
     let binary = '';
@@ -358,7 +473,7 @@ function attachAudioListeners() {
         btn.addEventListener('click', () => {
                         const player = btn.closest('.audio-player');
             const isDegraded = player.classList.contains('audio-player-degraded');
-            const src = btn.dataset.src || createDemoAudioDataUrl(isDegraded);
+            const src = btn.dataset.src || createDemoAudioDataUrl(player.dataset.module, isDegraded);
             
             // Se o mesmo botão está tocando, pausa
             if (currentPlayingBtn === btn && !audioElement.paused) {
@@ -750,4 +865,4 @@ function initApp() {
 }
 
 // Inicia quando o DOM estiver pronto
-document.addEventListener('DOMContentLoaded', initApp);
+document.addEventListener('DOMContentLoaded', initApp
