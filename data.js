@@ -65,6 +65,25 @@ const modulesData = {
     }
 };
 
+const audioReferences = [
+    {
+        title: 'Shannon, C. E. (1949). Communication in the Presence of Noise. Proceedings of the IRE, 37(1), 10–21.',
+        url: 'https://doi.org/10.1109/JRPROC.1949.232969'
+    },
+    {
+        title: 'Pohlmann, K. C. Principles of Digital Audio. 6ª edição. McGraw-Hill, 2010.',
+        url: 'https://www.accessengineeringlibrary.com/content/book/9780071663465'
+    },
+    {
+        title: 'Xiph.Org Foundation. FLAC — Free Lossless Audio Codec: documentação oficial.',
+        url: 'https://xiph.org/flac/'
+    },
+    {
+        title: 'International Organization for Standardization. ISO/IEC 11172-3: MPEG-1 Audio.',
+        url: 'https://www.iso.org/standard/22412.html'
+    }
+];
+
 const quizData = [
     {
         question: 'O que indica a taxa de amostragem (sample rate)?',
