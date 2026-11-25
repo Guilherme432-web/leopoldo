@@ -943,6 +943,47 @@ body {
     padding: var(--spacing-md);
 }
 
+.learning-video {
+    display: block;
+    width: 100%;
+    max-width: 760px;
+    aspect-ratio: 16 / 9;
+    margin: 0 auto var(--spacing-md);
+    border-radius: var(--radius-sm);
+    background: #000;
+}
+
+.references-section {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-lg);
+}
+
+.references-section h2 {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    margin-bottom: var(--spacing-sm);
+    color: var(--accent-cyan);
+    font-size: 1.2rem;
+}
+
+.references-section ul {
+    padding-left: 1.25rem;
+    color: var(--text-secondary);
+}
+
+.references-section li + li { margin-top: var(--spacing-xs); }
+.references-section a { color: var(--accent-cyan); overflow-wrap: anywhere; }
+.references-section a:hover { color: var(--accent-purple); }
+
+button:focus-visible,
+a:focus-visible {
+    outline: 3px solid var(--accent-cyan);
+    outline-offset: 3px;
+}
+
 .concept-illustration,
 .learning-animation svg {
     display: block;
