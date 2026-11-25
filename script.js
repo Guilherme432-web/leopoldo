@@ -16,6 +16,11 @@
 // SISTEMA DE NAVEGAÇÃO
 // ========================================
 function navigateTo(moduleId) {
+    // Evita rotas inválidas vindas de hashes ou links externos.
+    if (moduleId !== 'home' && moduleId !== 'quiz' && !modulesData[moduleId]) {
+        moduleId = 'home';
+    }
+
     // Atualiza estado
     AppState.currentModule = moduleId;
     AppState.visitedModules.add(moduleId);
@@ -199,10 +204,21 @@ function renderLearningAnimation(module) {
         bitrate: '<rect class="animation-track" x="45" y="30" width="570" height="30" rx="8"/><rect class="animation-track" x="45" y="82" width="570" height="30" rx="8"/><g class="animation-flow"><rect x="58" y="38" width="38" height="14" rx="3"/><rect x="112" y="38" width="38" height="14" rx="3"/><rect x="166" y="38" width="38" height="14" rx="3"/><rect x="220" y="38" width="38" height="14" rx="3"/><rect x="274" y="38" width="38" height="14" rx="3"/><rect x="328" y="38" width="38" height="14" rx="3"/><rect x="382" y="38" width="38" height="14" rx="3"/><rect x="436" y="38" width="38" height="14" rx="3"/><rect x="490" y="38" width="38" height="14" rx="3"/><rect x="544" y="38" width="38" height="14" rx="3"/></g><text x="45" y="132">Fluxo de dados por segundo</text>',
         formats: '<rect class="animation-lossless" x="55" y="30" width="220" height="86" rx="12"/><rect class="animation-lossy" x="385" y="30" width="220" height="86" rx="12"/><path class="animation-arrow" d="M295 73 H365"/><text x="165" y="80" text-anchor="middle">Preserva os dados</text><text x="495" y="80" text-anchor="middle">Reduz o tamanho</text>'
     };
+    const videoSources = {
+        'sample-rate': 'videos/sample-rate.mp4',
+        'bit-depth': 'videos/bit-depth.mp4',
+        bitrate: 'videos/bitrate.mp4',
+        formats: 'videos/formats.mp4'
+    };
+
     return `
         <section class="video-section">
             <h2><i class="fas fa-film"></i> Vídeo educativo: ${module.title}</h2>
-            <p class="video-description">Animação visual curta para reforçar o conceito. Use o controle para pausar ou retomar.</p>
+            <p class="video-description">Assista ao vídeo ou use a animação ilustrativa caso o arquivo MP4 não esteja disponível.</p>
+            <video class="learning-video" controls loop muted playsinline preload="metadata" aria-label="Vídeo educativo sobre ${module.title}" hidden>
+                <source src="${videoSources[module.id] || ''}" type="video/mp4">
+                Seu navegador não suporta vídeo MP4.
+            </video>
             <div class="learning-animation">
                 <svg viewBox="0 0 680 150" role="img" aria-label="Animação explicativa sobre ${module.title}">${scenes[module.id] || ''}</svg>
             </div>
@@ -211,6 +227,24 @@ function renderLearningAnimation(module) {
 }
 
 function attachLearningAnimationListeners() {
+    document.querySelectorAll('.video-section').forEach(section => {
+        const video = section.querySelector('.learning-video');
+        const animation = section.querySelector('.learning-animation');
+        const toggle = section.querySelector('.animation-toggle');
+
+        video.addEventListener('loadeddata', () => {
+            video.hidden = false;
+            animation.hidden = true;
+            toggle.hidden = true;
+        }, { once: true });
+
+        video.addEventListener('error', () => {
+            video.hidden = true;
+            animation.hidden = false;
+            toggle.hidden = false;
+        }, { once: true });
+    });
+
     document.querySelectorAll('.animation-toggle').forEach(button => {
         button.addEventListener('click', () => {
             const animation = button.closest('.video-section').querySelector('.learning-animation');
@@ -302,6 +336,13 @@ function renderModuleContent(module) {
                     <div class="theory-content">
                         ${module.theory}
                     </div>
+                </section>
+
+                <section class="references-section" aria-labelledby="referencesTitle">
+                    <h2 id="referencesTitle"><i class="fas fa-book"></i> Referências</h2>
+                    <ul>${audioReferences.map(reference => `
+                        <li><a href="${reference.url}" target="_blank" rel="noopener noreferrer">${reference.title}</a></li>
+                    `).join('')}</ul>
                 </section>
 
                 <section class="illustration-section">
@@ -693,85 +734,63 @@ function renderQuizResult() {
 }
 
 function attachQuizListeners() {
-    // Se o quiz já terminou, anexa listeners dos botões de resultado
-    if (AppState.quizState.finished) {
-        const retryBtn = document.getElementById('quizRetryBtn');
-        const homeBtn = document.getElementById('quizHomeBtn');
-        
-        if (retryBtn) {
-            retryBtn.addEventListener('click', () => {
-                resetQuiz();
-                renderModule('quiz');
-                attachQuizListeners();
-            });
-        }
-        
-        if (homeBtn) {
-            homeBtn.addEventListener('click', () => {
-                resetQuiz();
-                navigateTo('home');
-            });
-        }
-        return;
-    }
-    
-    const options = document.querySelectorAll('.quiz-option');
-    const feedback = document.getElementById('quizFeedback');
-    const nextBtn = document.getElementById('quizNextBtn');
-    const currentQ = quizData[AppState.quizState.currentQuestion];
-    
-    options.forEach(opt => {
-        opt.addEventListener('click', () => {
-            // Evita múltiplas respostas na mesma pergunta
-            if (feedback.classList.contains('show')) return;
-            
-            const selectedIndex = parseInt(opt.dataset.index);
+    const mainContent = document.getElementById('mainContent');
+    if (!mainContent || mainContent.dataset.quizEventsAttached === 'true') return;
+
+    // Um único listener delegado continua válido mesmo quando o quiz é renderizado novamente.
+    mainContent.dataset.quizEventsAttached = 'true';
+    mainContent.addEventListener('click', event => {
+        const option = event.target.closest('.quiz-option');
+        if (option && mainContent.contains(option)) {
+            const feedback = document.getElementById('quizFeedback');
+            if (!feedback || feedback.classList.contains('show')) return;
+
+            const currentQ = quizData[AppState.quizState.currentQuestion];
+            if (!currentQ) return;
+
+            const options = [...mainContent.querySelectorAll('.quiz-option')];
+            const selectedIndex = Number.parseInt(option.dataset.index, 10);
             const isCorrect = selectedIndex === currentQ.correct;
-            
-            // Salva resposta
             AppState.quizState.answers[AppState.quizState.currentQuestion] = selectedIndex;
             if (isCorrect) AppState.quizState.score++;
-            
-            // Marca visualmente
-            options.forEach(o => o.classList.add('disabled'));
-            opt.classList.add(isCorrect ? 'correct' : 'incorrect');
-            
-            if (!isCorrect) {
+
+            options.forEach(item => item.classList.add('disabled'));
+            option.classList.add(isCorrect ? 'correct' : 'incorrect');
+            if (!isCorrect && options[currentQ.correct]) {
                 options[currentQ.correct].classList.add('correct');
             }
-            
-            // Mostra feedback com animação
+
             feedback.classList.remove('hidden');
             setTimeout(() => feedback.classList.add('show'), 10);
-            
-            const feedbackIcon = feedback.querySelector('.quiz-feedback-icon');
-            const feedbackText = feedback.querySelector('.quiz-feedback-text');
-            
-            if (isCorrect) {
-                feedback.classList.add('feedback-correct');
-                feedbackIcon.innerHTML = '<i class="fas fa-check-circle"></i>';
-                feedbackText.innerHTML = `<strong>Correto!</strong><p>${currentQ.explanation}</p>`;
-            } else {
-                feedback.classList.add('feedback-incorrect');
-                feedbackIcon.innerHTML = '<i class="fas fa-times-circle"></i>';
-                feedbackText.innerHTML = `<strong>Incorreto.</strong><p>${currentQ.explanation}</p>`;
-            }
-            
-            // Mostra botão próxima
-            nextBtn.classList.remove('hidden');
-        });
-    });
-    
-    // Botão próxima pergunta
-    nextBtn.addEventListener('click', () => {
-        AppState.quizState.currentQuestion++;
-        
-        if (AppState.quizState.currentQuestion >= quizData.length) {
-            AppState.quizState.finished = true;
+            feedback.classList.add(isCorrect ? 'feedback-correct' : 'feedback-incorrect');
+            feedback.querySelector('.quiz-feedback-icon').innerHTML = isCorrect
+                ? '<i class="fas fa-check-circle"></i>'
+                : '<i class="fas fa-times-circle"></i>';
+            feedback.querySelector('.quiz-feedback-text').innerHTML =
+                `<strong>${isCorrect ? 'Correto!' : 'Incorreto.'}</strong><p>${currentQ.explanation}</p>`;
+            document.getElementById('quizNextBtn')?.classList.remove('hidden');
+            return;
         }
-        
-        renderModule('quiz');
-        attachQuizListeners();
+
+        if (event.target.closest('#quizNextBtn')) {
+            AppState.quizState.currentQuestion++;
+            if (AppState.quizState.currentQuestion >= quizData.length) {
+                AppState.quizState.finished = true;
+            }
+            renderModule('quiz');
+            return;
+        }
+
+        if (event.target.closest('#quizRetryBtn')) {
+            resetQuiz();
+            renderModule('quiz');
+            return;
+        }
+
+        if (event.target.closest('#quizHomeBtn')) {
+            resetQuiz();
+            navigateTo('home');
+        }
     });
 }
 
