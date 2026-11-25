@@ -865,4 +865,4 @@ function initApp() {
 }
 
 // Inicia quando o DOM estiver pronto
-document.addEventListener('DOMContentLoaded', initApp
+document.addEventListener('DOMContentLoaded', initApp);
