@@ -1,12 +1,4 @@
-
-            
-    
-
-
-
-
-
-    const AppState = {
+const AppState = {
     currentModule: 'home',
     visitedModules: new Set(['home']),
     quizState: {
@@ -16,6 +8,10 @@
         finished: false
     }
 };
+
+// ADICIONE ESTAS DUAS LINHAS AQUI:
+let currentPlayingBtn = null;
+const demoAudioUrls = {};
 
 // ========================================
 // SISTEMA DE NAVEGAÇÃO
@@ -434,6 +430,7 @@ function createDemoAudioDataUrl(demoId) {
     const bytesPerSample = 2;
     const buffer = new ArrayBuffer(44 + sampleCount * bytesPerSample);
     const view = new DataView(buffer);
+    
     const writeText = (offset, str) => {
         for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
     };
@@ -452,19 +449,14 @@ function createDemoAudioDataUrl(demoId) {
     writeText(36, 'data');
     view.setUint32(40, sampleCount * bytesPerSample, true);
 
-    // Perfis mais distintos e audíveis
     const profiles = {
-        // Sample rate
         'sr-high': { holdStep: 1, bits: 16, cutoff: 18000, noise: 0, grit: 0 },
         'sr-low':  { holdStep: Math.round(sampleRate / 5500), bits: 16, cutoff: 2500, noise: 0.01, grit: 0.15 },
-        // Bit depth
         'bd-16': { holdStep: 1, bits: 16, cutoff: 18000, noise: 0, grit: 0 },
         'bd-3':  { holdStep: 1, bits: 3,  cutoff: 12000, noise: 0.02, grit: 0.4 },
-        // Bitrate (64 / 128 / 320 kbps)
         'br-320': { holdStep: 1, bits: 15, cutoff: 16000, noise: 0.002, grit: 0.02 },
         'br-128': { holdStep: 2, bits: 11, cutoff: 9000,  noise: 0.012, grit: 0.12 },
         'br-64':  { holdStep: 5, bits: 7,  cutoff: 4500,  noise: 0.03,  grit: 0.28 },
-        // Formatos
         'fmt-wav':  { holdStep: 1, bits: 16, cutoff: 18000, noise: 0, grit: 0 },
         'fmt-flac': { holdStep: 1, bits: 16, cutoff: 18000, noise: 0, grit: 0 },
         'fmt-mp3':  { holdStep: 3, bits: 9,  cutoff: 7000,  noise: 0.018, grit: 0.18 },
@@ -479,28 +471,24 @@ function createDemoAudioDataUrl(demoId) {
     for (let i = 0; i < sampleCount; i++) {
         if (i % p.holdStep === 0) {
             const t = i / sampleRate;
-            // Tom musical rico (acorde arpejado + brilho)
             const envNote = 0.55 + 0.45 * Math.sin(2 * Math.PI * 2.2 * t);
             let tone =
-                Math.sin(2 * Math.PI * 261.63 * t) * 0.28 * envNote +  // C4
-                Math.sin(2 * Math.PI * 329.63 * t) * 0.22 +             // E4
-                Math.sin(2 * Math.PI * 392.00 * t) * 0.18 +             // G4
-                Math.sin(2 * Math.PI * 523.25 * t) * 0.12 +             // C5
-                Math.sin(2 * Math.PI * 1046.5 * t) * 0.08 +             // C6
-                Math.sin(2 * Math.PI * 2093 * t) * 0.05 +               // C7 (agudo)
-                Math.sin(2 * Math.PI * 4186 * t) * 0.03;                // C8
+                Math.sin(2 * Math.PI * 261.63 * t) * 0.28 * envNote +
+                Math.sin(2 * Math.PI * 329.63 * t) * 0.22 +
+                Math.sin(2 * Math.PI * 392.00 * t) * 0.18 +
+                Math.sin(2 * Math.PI * 523.25 * t) * 0.12 +
+                Math.sin(2 * Math.PI * 1046.5 * t) * 0.08 +
+                Math.sin(2 * Math.PI * 2093 * t) * 0.05 +
+                Math.sin(2 * Math.PI * 4186 * t) * 0.03;
 
-            // Low-pass de 1 polo (corta agudos em baixo bitrate / lossy)
             lp += alpha * (tone - lp);
             tone = p.cutoff >= 16000 ? tone : lp;
 
-            // Quantização
             if (p.bits < 16) {
                 const levels = Math.pow(2, p.bits) - 1;
                 tone = Math.round((tone + 1) * levels / 2) / levels * 2 - 1;
             }
 
-            // Ruído + "grit" (artefato de compressão)
             if (p.noise > 0) {
                 tone += (Math.random() * 2 - 1) * p.noise;
             }
@@ -517,22 +505,55 @@ function createDemoAudioDataUrl(demoId) {
         view.setInt16(44 + i * bytesPerSample, value * 32767, true);
     }
 
-    let binary = '';
-    const bytes = new Uint8Array(buffer);
-    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
-    demoAudioUrls[demoId] = `data:audio/wav;base64,${btoa(binary)}`;
+    // ✅ SUBSTITUIÇÃO SEGURA E MODERNA (evita travamento com btoa)
+    const blob = new Blob([buffer], { type: 'audio/wav' });
+    demoAudioUrls[demoId] = URL.createObjectURL(blob);
+    
     return demoAudioUrls[demoId];
+}
+
+function updatePlayButton(btn, isPlaying) {
+    // Proteção: se o botão foi removido do DOM, interrompe a execução para evitar erros
+    if (!btn) return; 
+    
+    const icon = btn.querySelector('i');
+    const text = btn.querySelector('span');
+    const player = btn.closest('.audio-player');
+    const waveform = player ? player.querySelector('.audio-waveform') : null;
+    
+    if (isPlaying) {
+        if (icon) icon.className = 'fas fa-pause';
+        if (text) text.textContent = 'Pausar';
+        if (player) player.classList.add('playing');
+        if (waveform) waveform.classList.add('active');
+    } else {
+        if (icon) icon.className = 'fas fa-play';
+        if (text) text.textContent = 'Ouvir';
+        if (player) player.classList.remove('playing');
+        if (waveform) waveform.classList.remove('active');
+    }
 }
 
 function attachAudioListeners() {
     const playButtons = document.querySelectorAll('.play-btn');
     const audioElement = document.getElementById('audioPlayer');
-    if (!audioElement) return;
+    
+    if (!audioElement) {
+        console.warn('Elemento <audio id="audioPlayer"> não encontrado no DOM.');
+        return;
+    }
+
+    // CORREÇÃO CRÍTICA: Reseta o estado ao carregar um novo módulo.
+    // Isso evita que o código tente manipular botões que foram destruídos na navegação anterior.
+    currentPlayingBtn = null;
 
     playButtons.forEach(btn => {
         btn.addEventListener('click', () => {
             const demoId = btn.dataset.demo;
             const src = createDemoAudioDataUrl(demoId);
+            
+            // Log para depuração: confirme no console (F12) se isso aparece ao clicar
+            console.log('🎵 Tentando reproduzir:', demoId, '| URL:', src);
 
             if (currentPlayingBtn === btn && !audioElement.paused) {
                 audioElement.pause();
@@ -547,8 +568,13 @@ function attachAudioListeners() {
             }
 
             audioElement.src = src;
-            audioElement.play().catch(err => {
-                console.warn('Erro ao tocar áudio:', err);
+            
+            // CORREÇÃO: Tratamento de erro explícito para identificar bloqueios do navegador
+            audioElement.play().then(() => {
+                console.log('✅ Áudio reproduzindo com sucesso!');
+            }).catch(err => {
+                console.error('❌ Erro ao tocar áudio:', err);
+                console.warn('💡 Dica: Verifique se a aba do navegador não está silenciada (clique com botão direito na guia) ou se há extensões bloqueando mídia.');
             });
 
             updatePlayButton(btn, true);
@@ -564,25 +590,6 @@ function attachAudioListeners() {
     });
 
     attachModuleNavigation();
-}
-
-function updatePlayButton(btn, isPlaying) {
-    const icon = btn.querySelector('i');
-    const text = btn.querySelector('span');
-    const player = btn.closest('.audio-player');
-    const waveform = player.querySelector('.audio-waveform');
-    
-    if (isPlaying) {
-        icon.className = 'fas fa-pause';
-        text.textContent = 'Pausar';
-        player.classList.add('playing');
-        waveform.classList.add('active');
-    } else {
-        icon.className = 'fas fa-play';
-        text.textContent = 'Ouvir';
-        player.classList.remove('playing');
-        waveform.classList.remove('active');
-    }
 }
 
 function attachModuleNavigation() {
